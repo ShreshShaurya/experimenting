@@ -70,7 +70,7 @@ def log_scalar(name, value, step):
     """Log a scalar value to both MLflow and TensorBoard"""
     mlflow.log_metric(name, value, step=step)
 
-def train_model(n_epochs,model,criterion,optimizer):
+def main(n_epochs,model,criterion,optimizer):
     # Train the model
     for epoch in range(n_epochs):
         running_loss = 0.0
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-        accuracy = train_model(n_epochs,model,criterion,optimizer)
+        accuracy = main(n_epochs,model,criterion,optimizer)
 
         # logging parameters 
         mlflow.log_param("epochs", n_epochs)
