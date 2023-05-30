@@ -26,10 +26,6 @@ logging.basicConfig(level=logging.WARN)
 #logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-#so as to get different pytorch model
-timestamp = int(time.time()) 
-#model_dir = f"/mlflow_torch/models/{timestamp}"
-model_dir = f"ml_torch/models/{timestamp}"
 
 # Define the transformation to normalize the data
 transform = transforms.Compose([
@@ -74,21 +70,7 @@ def log_scalar(name, value, step):
     """Log a scalar value to both MLflow and TensorBoard"""
     mlflow.log_metric(name, value, step=step)
 
-def main():
-    # Number of epochs to train for 
-    #   n_epochs = 10
-    n_epochs = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-
-     # logging parameters 
-    mlflow.log_param("epochs", n_epochs)
-
-    # Create an instance of the model
-    model = FashionClassifier()
-
-    # Define the loss function and optimizer
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-
+def train_model(n_epochs,model,criterion,optimizer):
     # Train the model
     for epoch in range(n_epochs):
         running_loss = 0.0
@@ -122,16 +104,58 @@ def main():
             correct += (predicted == labels).sum().item()
     accuracy = 100 * correct / total
     print('Accuracy on the test set: %.2f %%' % accuracy)
+    return accuracy
+
+
+#mlflow start
+
+# defining a new experiment
+experiment_name = 'ML_TORCH1'
+
+# returns experiment ID
+tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
+try:
+    # creating a new experiment
+    exp_id = mlflow.create_experiment(name=experiment_name)
+except Exception as e:
+    exp_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
+
+#CONFIRM THIS
+#signature = infer_signature(trainset, testset)
+#so as to get different pytorch model
+timestamp = int(time.time()) 
+#model_dir = f"/mlflow_torch/models/{timestamp}"
+model_dir = f"ml_torch/models/{timestamp}"
+
+if __name__ == "__main__":
+
+    # Number of epochs to train for 
+    #   n_epochs = 10
+    n_epochs = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+
 
     # log the model
-    with mlflow.start_run(experiment_id=exp_id, run_name = 'fifth_pytorch_run') as run:
+    with mlflow.start_run(experiment_id=exp_id, run_name = 'first_pytorch_run') as run:
         # adding tags to the run
         mlflow.set_tag('Description','Simple MNIST pytorch Model')
         mlflow.set_tags({'ProblemType': 'Classification', 'ModelLibrary': 'pytorch'})
-        
+
+
+        # Create an instance of the model
+        model = FashionClassifier()
+
+        # Define the loss function and optimizer
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+
+        accuracy = train_model(n_epochs,model,criterion,optimizer)
+
+        # logging parameters 
+        mlflow.log_param("epochs", n_epochs)
+
         # logging metrics
         mlflow.log_metric("accuracy", accuracy)
-    
+        
         #model name
         mlflow.pytorch.log_model(model, "models")
 
@@ -139,25 +163,4 @@ def main():
         mlflow.pytorch.save_model(model, path = model_dir)
         
         #mlflow.pytorch.save_model(model, pytorch_model_path)
-
-#mlflow start
-
-# defining a new experiment
-experiment_name = 'ML_TORCH'
-
-# returns experiment ID
-tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
-
-#CONFIRM THIS
-#signature = infer_signature(trainset, testset)
-
-
-if __name__ == "__main__":
-
-    try:
-    # creating a new experiment
-        exp_id = mlflow.create_experiment(name=experiment_name)
-    except Exception as e:
-        exp_id = mlflow.get_experiment_by_name(experiment_name).experiment_id
-    
-    main()
+        mlflow.end_run()
