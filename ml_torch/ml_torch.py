@@ -70,7 +70,19 @@ def log_scalar(name, value, step):
     """Log a scalar value to both MLflow and TensorBoard"""
     mlflow.log_metric(name, value, step=step)
 
-def main(n_epochs,model,criterion,optimizer):
+def main():
+    # Number of epochs to train for 
+    #   n_epochs = 10
+    n_epochs = int(sys.argv[1]) if len(sys.argv) > 1 else 5
+
+
+    # Create an instance of the model
+    model = FashionClassifier()
+
+    # Define the loss function and optimizer
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+
     # Train the model
     for epoch in range(n_epochs):
         running_loss = 0.0
@@ -104,7 +116,8 @@ def main(n_epochs,model,criterion,optimizer):
             correct += (predicted == labels).sum().item()
     accuracy = 100 * correct / total
     print('Accuracy on the test set: %.2f %%' % accuracy)
-    return accuracy
+    # logging metrics
+    mlflow.log_metric("accuracy", accuracy)
 
 
 #mlflow start
@@ -129,10 +142,6 @@ model_dir = f"ml_torch/models/{timestamp}"
 
 if __name__ == "__main__":
 
-    # Number of epochs to train for 
-    #   n_epochs = 10
-    n_epochs = int(sys.argv[1]) if len(sys.argv) > 1 else 5
-
 
     # log the model
     with mlflow.start_run(experiment_id=exp_id, run_name = 'fourth_pytorch_run') as run:
@@ -140,21 +149,11 @@ if __name__ == "__main__":
         mlflow.set_tag('Description','Simple MNIST pytorch Model')
         mlflow.set_tags({'ProblemType': 'Classification', 'ModelLibrary': 'pytorch'})
 
-
-        # Create an instance of the model
-        model = FashionClassifier()
-
-        # Define the loss function and optimizer
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-
-        accuracy = main(n_epochs,model,criterion,optimizer)
+        main()
 
         # logging parameters 
         mlflow.log_param("epochs", n_epochs)
 
-        # logging metrics
-        mlflow.log_metric("accuracy", accuracy)
         
         #model name
         mlflow.pytorch.log_model(model, "models")
