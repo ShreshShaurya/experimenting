@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/stagiaire/Documents/GitHub/experimenting/ml_torch/mlruns/419875029537390257/3e583bc517934485a0c7b3b2da9f9b14/artifacts
+end_time: 1685454341722
+entry_point_name: ''
+experiment_id: '419875029537390257'
+lifecycle_stage: active
+run_id: 3e583bc517934485a0c7b3b2da9f9b14
+run_name: fourth_pytorch_run
+run_uuid: 3e583bc517934485a0c7b3b2da9f9b14
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1685453775468
+status: 4
+tags: []
+user_id: stagiaire
